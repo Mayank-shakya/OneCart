@@ -39,42 +39,41 @@ export const placeOrder = async (req,res) => {
 }
 
 
-export const placeOrderRazorpay = async (req,res) => {
-    try {
-        
-         const {items , amount , address} = req.body;
-         const userId = req.userId;
-         const orderData = {
-            items,
-            amount,
-            userId,
-            address,
-            paymentMethod:'Razorpay',
-            payment:false,
-            date: Date.now()
-         }
+export const placeOrderRazorpay = async (req, res) => {
+  try {
+    const { items, amount, address } = req.body;
+    const userId = req.userId;
 
-         const newOrder = new Order(orderData)
-         await newOrder.save()
+    // Save order with placeholder Razorpay details
+    const newOrder = new Order({
+      items,
+      amount,
+      userId,
+      address,
+      paymentMethod: "Razorpay",
+      payment: false,
+      date: Date.now(),
+    });
+    await newOrder.save();
 
-         const options = {
-            amount:amount * 100,
-            currency: currency.toUpperCase(),
-            receipt : newOrder._id.toString()
-         }
-         await razorpayInstance.orders.create(options, (error,order)=>{
-            if(error) {
-                console.log(error)
-                return res.status(500).json(error)
-            }
-            res.status(200).json(order)
-         })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({message:error.message
-            })
-    }
-}
+    // Razorpay expects amount in paise (i.e., ₹500 = 50000)
+    const options = {
+      amount: amount * 100, // 🟢 important: convert to paise
+      currency: "INR",
+      receipt: newOrder._id.toString(),
+    };
+
+    // 🔥 Use only async/await — no callback
+    const order = await razorpayInstance.orders.create(options);
+
+    // Send Razorpay order to frontend
+    res.status(200).json(order);
+  } catch (error) {
+    console.log("Razorpay order create error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 
 export const verifyRazorpay = async (req,res) =>{

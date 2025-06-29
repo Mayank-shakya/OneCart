@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import Title from '../component/Title'
 import CartTotal from '../component/CartTotal'
-import razorpay from '../assets/Razorpay.jpg'
+import razorpay from '../assets/rzrpay.jpg'
 import { shopDataContext } from '../context/ShopContext'
 import { authDataContext } from '../context/authContext'
 import axios from 'axios'
@@ -34,27 +34,34 @@ function PlaceOrder() {
     setFormData(data => ({...data,[name]:value}))
     }
 
-    const initPay = (order) =>{
-        const options = {
-      key:import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name:'Order Payment',
-      description: 'Order Payment',
-      order_id: order.id,
-      receipt: order.receipt,
-      handler: async (response) => {
-        console.log(response)
-    const {data} = await axios.post(serverUrl + '/api/order/verifyrazorpay',response,{withCredentials:true})
-    if(data){
-        navigate("/order")
-        setCartItem({})
+   const initPay = (order) => {
+  const options = {
+    key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+    amount: order.amount,
+    currency: order.currency,
+    name: 'Order Payment',
+    description: 'Order Payment',
+    order_id: order.id, 
 
-    }
-      }}
-    const rzp = new window.Razorpay(options)
-    rzp.open()
-   }
+
+    handler: async (response) => {
+      console.log(response);
+      const { data } = await axios.post(
+        serverUrl + '/api/order/verifyrazorpay',
+        response,
+        { withCredentials: true }
+      );
+      if (data) {
+        navigate('/order');
+        setCartItem({});
+      }
+    },
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+};
+
 
     
      const onSubmitHandler = async (e) => {
